@@ -1,0 +1,304 @@
+39.65, 3.0108
+39.6452, 3.016
+
+http://osmose.openstreetmap.fr/api/0.3/issues?bbox=7.5835690,47.5474820,7.5913500,47.5551844&full=true&limit=500
+
+http://osmose.openstreetmap.fr/api/0.3/issue/9ad6bb00-f421-dbac-e0ae-bedc425c1ec2
+http://osmose.openstreetmap.fr/api/0.3/issue/769fbfc1-5b26-d8a9-4422-5102f1f94739
+
+http://osmose.openstreetmap.fr/api/0.3/issues?bbox=3.0108,39.6452,3.016,39.65&full=true&limit=500
+
+{
+  "issues": [
+    {
+      "lat": 39.6459378,
+      "lon": 3.0146217,
+      "id": "9ad6bb00-f421-dbac-e0ae-bedc425c1ec2",
+      "item": "2060",
+      "source": 13684,
+      "class": 19,
+      "subtitle": {
+        "auto": "No street with name \"Metge Rafel Rotger i Mestre\" found around"
+      },
+      "title": {
+        "auto": "Tag \"addr:street\" not matching a street name around"
+      },
+      "level": 2,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "Tomeu Capó"
+      ],
+      "osm_ids": {
+        "ways": [
+          878869543
+        ]
+      }
+    },
+    {
+      "lat": 39.646538,
+      "lon": 3.0151174,
+      "id": "8a051ec2-650c-6bad-cfd2-8896b0a55c77",
+      "item": "2060",
+      "source": 13684,
+      "class": 1,
+      "subtitle": null,
+      "title": {
+        "auto": "addr:housenumber or addr:housename without addr:street, addr:district, addr:neighbourhood, addr:quarter, addr:suburb, addr:place or addr:hamlet must be in a associatedStreet relation"
+      },
+      "level": 3,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "bubeck"
+      ],
+      "osm_ids": {
+        "ways": [
+          1088372939
+        ]
+      }
+    },
+    {
+      "lat": 39.6477723,
+      "lon": 3.0150456,
+      "id": "b049fce7-20bc-642e-681d-c842205a1d59",
+      "item": "2060",
+      "source": 13684,
+      "class": 19,
+      "subtitle": {
+        "auto": "No street with name \"carrer dels Molins\" found around"
+      },
+      "title": {
+        "auto": "Tag \"addr:street\" not matching a street name around"
+      },
+      "level": 2,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "bubeck"
+      ],
+      "osm_ids": {
+        "ways": [
+          1088372935
+        ]
+      }
+    },
+    {
+      "lat": 39.645248,
+      "lon": 3.0155541,
+      "id": "769fbfc1-5b26-d8a9-4422-5102f1f94739",
+      "item": "5020",
+      "source": 13672,
+      "class": 702,
+      "subtitle": null,
+      "title": {
+        "auto": "Badly written way type"
+      },
+      "level": 2,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "matchman"
+      ],
+      "osm_ids": {
+        "ways": [
+          86314188
+        ]
+      }
+    },
+    {
+      "lat": 39.6455648,
+      "lon": 3.0144806,
+      "id": "fc4b34c9-f889-e45c-658f-1a98b3221d5f",
+      "item": "5020",
+      "source": 13672,
+      "class": 702,
+      "subtitle": null,
+      "title": {
+        "auto": "Badly written way type"
+      },
+      "level": 2,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "pedrojuan01"
+      ],
+      "osm_ids": {
+        "ways": [
+          86314176
+        ]
+      }
+    },
+    {
+      "lat": 39.6457532,
+      "lon": 3.0110798,
+      "id": "178fab53-9c64-ef74-2ec9-0e44ca3f08dd",
+      "item": "5020",
+      "source": 13672,
+      "class": 702,
+      "subtitle": null,
+      "title": {
+        "auto": "Badly written way type"
+      },
+      "level": 2,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "Mateusz Konieczny - bot account"
+      ],
+      "osm_ids": {
+        "ways": [
+          23291416
+        ]
+      }
+    },
+    {
+      "lat": 39.6457974,
+      "lon": 3.0128216,
+      "id": "fb987fc5-c19e-9f07-85c7-d580cc6fe570",
+      "item": "5020",
+      "source": 13672,
+      "class": 702,
+      "subtitle": null,
+      "title": {
+        "auto": "Badly written way type"
+      },
+      "level": 2,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "matchman"
+      ],
+      "osm_ids": {
+        "ways": [
+          81661075
+        ]
+      }
+    },
+    {
+      "lat": 39.6460283,
+      "lon": 3.0112586,
+      "id": "5866c5ae-5bfc-2977-8888-4a734a03e1dd",
+      "item": "5020",
+      "source": 13672,
+      "class": 702,
+      "subtitle": null,
+      "title": {
+        "auto": "Badly written way type"
+      },
+      "level": 2,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "SergiClares"
+      ],
+      "osm_ids": {
+        "ways": [
+          86314181
+        ]
+      }
+    },
+    {
+      "lat": 39.6462795,
+      "lon": 3.0120451,
+      "id": "ebe26218-c078-8256-ef7e-8bc47a92c551",
+      "item": "5020",
+      "source": 13672,
+      "class": 702,
+      "subtitle": null,
+      "title": {
+        "auto": "Badly written way type"
+      },
+      "level": 2,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "mateuvic"
+      ],
+      "osm_ids": {
+        "ways": [
+          141842925
+        ]
+      }
+    },
+    {
+      "lat": 39.6468696,
+      "lon": 3.0134005,
+      "id": "c5460648-53c4-8a89-c2db-c21a9a773c61",
+      "item": "5020",
+      "source": 13672,
+      "class": 702,
+      "subtitle": null,
+      "title": {
+        "auto": "Badly written way type"
+      },
+      "level": 2,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "bubeck"
+      ],
+      "osm_ids": {
+        "ways": [
+          145472571
+        ]
+      }
+    },
+    {
+      "lat": 39.6471228,
+      "lon": 3.0145385,
+      "id": "d4873104-bbac-e8da-294f-c139d4dcfc80",
+      "item": "5020",
+      "source": 13672,
+      "class": 702,
+      "subtitle": null,
+      "title": {
+        "auto": "Badly written way type"
+      },
+      "level": 2,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "bubeck"
+      ],
+      "osm_ids": {
+        "ways": [
+          86314229
+        ]
+      }
+    },
+    {
+      "lat": 39.6472796,
+      "lon": 3.0142786,
+      "id": "1031938d-cd9c-c08c-2742-4273a809940b",
+      "item": "5020",
+      "source": 13672,
+      "class": 702,
+      "subtitle": null,
+      "title": {
+        "auto": "Badly written way type"
+      },
+      "level": 2,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "bubeck"
+      ],
+      "osm_ids": {
+        "ways": [
+          1088372937
+        ]
+      }
+    },
+    {
+      "lat": 39.6489504,
+      "lon": 3.0138148,
+      "id": "c05f463a-0203-870b-e42f-358c1066f2ea",
+      "item": "5020",
+      "source": 13672,
+      "class": 702,
+      "subtitle": null,
+      "title": {
+        "auto": "Badly written way type"
+      },
+      "level": 2,
+      "update": "2022-08-31 02:30:25+00:00",
+      "usernames": [
+        "mateuvic"
+      ],
+      "osm_ids": {
+        "ways": [
+          145472592
+        ]
+      }
+    }
+  ]
+}

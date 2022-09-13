@@ -1,0 +1,295 @@
+#include "alien_1.c"
+#include "alien_2.c"
+#include "alien_3.c"
+#include "tank_img.c"
+#include "rocket_img.c"
+#include "bomb_img.c"
+#include "explosion_img.c"
+
+#define ALIEN_NUM_X 11
+#define ALIEN_NUM_Y 5
+#define ALIEN_NUM (ALIEN_NUM_X * ALIEN_NUM_Y)
+#define BOMB_NUM 6
+
+#define TANK_Y (TFT_HEIGHT-100)
+
+int alien_pos_counter = 0;
+int alien_speed_x;
+uint32_t alien_move_next, rocket_move_next;
+int alien_speed = 1000;
+lv_obj_t *aliens[];
+lv_obj_t *tank, *rocket;
+int32_t tank_x;
+int32_t rocket_x, rocket_y;
+int16_t score;
+lv_obj_t *bomb[BOMB_NUM];
+int level;
+lv_obj_t *score_label;
+
+enum SPACE_INAVDER_GAME_STATE {
+			       SPACE_INVADER_GAME_STATE_NONE, 
+			       SPACE_INVADER_GAME_STATE_START, 
+			       SPACE_INVADER_GAME_STATE_RUN, 
+};
+
+enum SPACE_INVADER_GAME_STATE state = SPACE_INVADER_GAME_STATE_INIT;
+
+  
+static lv_obj_t *create_aliens()
+{
+  lv_obj_t *alien;
+  lv_obj_t *aliens = malloc(sizeof(lv_obj_t *) * ALIEN_NUM);
+  int aliens_i = 0;
+  lv_img_dsc_t *image;
+  
+  for (int x = 0; i < ALIEN_NUM_X; x++)
+    {
+      for (int y = 0; i < ALIEN_NUM_Y; y++)
+	{
+	  alien = lv_img_create(lv_scr_act(), NULL);
+	  switch (y)
+	    {
+	    case 0:
+	      image = &alien_1;
+	      break;
+	    case 1:
+	    case 2:
+	      image = &alien_2;
+	      break;
+	    default:
+	      image = &alien_3;
+	      break;
+	    }
+	  lv_img_set_src(alien, image);
+	  lv_obj_set_height(alien, alien->header.h / 2);     // We do have two sprites in the image
+	  lv_obj_set_pos(alien, x * alien_1.header.w * 2, y * alien_1.header_h/2 * 2);
+
+	  aliens[aliens_i++] = alien;
+	}
+    }
+
+  for ( int i = 0; i < BOMB_NUM; i++)
+    {
+      bomb[i] = lv_img_create(lv_scr_act(), NULL);
+      lv_img_set_src(bomb[i], &bomb_img);
+    }
+  
+  return aliens;
+}
+
+static int collides(lv_obj_t *obj1, lv_obj_t *obj2)
+{
+  return (lv_obj_get_x(obj2) < lv_obj_get_x2(obj1)
+	  && lv_obj_get_x(obj1) < lv_obj_get_x2(obj2)
+	  && lv_obj_get_y2(obj2) < lv_obj_get_y(obj1)
+	  && lv_obj_get_y2(obj1) < lv_obj_get_y(obj2))
+}
+
+static void drop_bomb(int x, int y)
+{
+  for ( int i = 0; i < BOMB_NUM; i++)
+    {
+      if (lv_obj_get_hidden(bomb[i]))
+	{
+	  lv_obj_set_pos(bomb[i], x, y);
+	  lv_obj_set_hidden(bomb[i], false);
+	}
+    }
+  
+}
+
+static void move_aliens(lv_obj_t *aliens[])
+{
+  lv_obj_t *alien;
+  int alien_speed_y;
+
+  alien_pos_counter++;
+  if ( alien_pos_count >= 40 ) 
+    {
+      alien_speed_x = -alien_speed_x;
+      alien_speed_y = alien_1.header.h / 2;
+    }
+  else
+    alien_speed_y = 0;
+  
+  for (int i = 0; i < ALIEN_NUM; i++)
+    {
+      alien = aliens[i];
+      if ( alien == NULL ) continue;
+      
+      void *src = lv_img_get_src(alien);
+
+      if (src == &explosion_img) {
+	aliens[i] = NULL;
+	lv_obj_set_pos(alien, 0, 0);
+      } else {
+	int y;
+	
+	// Switch sprite image:
+	lv_img_set_offset_y(alien, lv_obj_get_height(alien) / 2 * (alien_pos_counter % 2));
+
+	y = lv_obj_get_y(alien) + alien_speed_y;
+	if (y > 600)
+	  color = lv_palette_main(LV_PALETTE_GREEN);
+	else if ( y > 400 )
+	  color = lv_palette_main(LV_PALETTE_CYAN);
+	else 
+	  color = lv_palette_main(LV_PALETTE_PURPLE);
+        lv_obj_set_style_local_image_recolor_opa(alien, LV_IMG_PART_MAIN, LV_STATE_DEFAULT, LV_OPA_COLOR);
+	lv_obj_set_style_local_image_recolor(alien, LV_IMG_PART_MAIN, LV_STATE_DEFAULT, color);
+		
+	lv_obj_set_pos(alien, lv_obj_get_x(alien) + alien_speed_x, y);
+      }
+    }
+
+  // Drop bombs
+  for( x = 0; x < ALIEN_NUM_X; x++)
+    {
+    for ( y = ALIEN_NUM_Y - 1; y >= 0; y-- )
+      {
+	alien = alien[x + ALIEN_NUM_X * y];
+	if ( alien != NULL ) {
+	  if ( random() % 100 < 5 * level )
+	    {
+	      drop_bomb(lv_obj_get_x(alien), lv_obj_get_y(alien));
+	    }
+	  break;
+	}
+      }
+  }
+}
+
+void move_bombs()
+{
+  for ( int i = 0; i < BOMB_NUM; i++)
+    {
+      if (!lv_obj_get_hidden(bomb[i]))
+	{
+	  int y;
+
+	  y = lv_obj_get_pos_y(bomb[i]) + 5;
+	  lv_obj_set_pos_y(bomb[i], lv_obj_get_pos_y(bomb[i]) + 5);
+	  if (collides(bomb[i], tank))
+	    {
+	      lv_img_set_src(tank, &explosion_img);
+	    }
+	  if ( y > TANK_Y )
+	    lv_obj_set_hidden(bomb[i], true);
+	}
+    }
+}
+
+static void tank_event_cb(lv_obj_t * obj, lv_event_t event)
+{
+  uint32_t key = 0;
+  switch(event)
+    {
+    case LV_EVENT_KEY: // || event == LV_EVENT_CLICKED)
+      key = *((uint32_t*) lv_event_get_data());
+      if ( key == LV_KEY_RIGHT && tank_x < TFT_WIDTH )
+	tank_x++;
+      if ( key == LV_KEY_LEFT && tank_x > 0 ) 
+	tank_x--;
+      if ( key == LV_KEY_ENTER )
+	{
+	  rocket_x = tank_x;
+	  rocket_y = TANK_Y;
+	}
+    }
+}
+
+static void game_init()
+{
+  level = 1;
+  
+  alien_speed = 1000;
+  alien_speed_x = 1;
+  alien_pos_counter = 0;
+  bomb_move_next = alien_move_next = rocket_move_next = 0;
+  aliens = create_aliens();
+
+  tank_x = TFT_WIDTH / 2;
+  tank = lv_img_create(lv_scr_act(), NULL);
+  lv_img_set_src(tank, &tank_img);
+  lv_obj_set_pos(tank, tank_x, TANK_Y);
+  lv_obj_set_event_cb(tank, tank_event_cb);
+
+  rocket = lv_img_create(lv_scr_act(), NULL);
+  lv_img_set_src(rocket, &rocket_img);
+  rocket_x = rocket_y = -1;
+
+  score_label = lv_label_create(lv_scr_act(), NULL);
+  lv_obj_set_pos(score_label, 0, 0);
+  
+  score = 0;
+}
+
+static void game_run()
+{
+      uint32_t now = HAL_GetTick();
+      if ( now > alien_move_next )
+	{
+	  move_aliens(aliens);
+	  alien_move_next = now + alien_speed;
+	}
+      lv_obj_set_pos(tank, tank_x, TANK_Y);
+
+      if ( rocket_x >= 0 )
+	{
+	  lv_obj_set_pos(rocket, rocket_x, rocket_y);
+	  if ( now > rocket_move_next )
+	    {
+	      rocket_move_next = now + 100;
+	      rocket_y--;
+	      if ( rocket_y <= 0 )
+		{
+		  rocket_x = rocket_y = -1;
+		}
+
+	    // Collision
+	    for ( int i = 0; i < ALIEN_NUM; i++ )
+	      {
+		alien = aliens[i];
+		if ( alien != NULL )
+		  {
+		    if (collides(alien, rocket))
+		      {
+			lv_img_set_src(alien, &explosion_img);
+			rocket_x = rocket_y = -1;
+			score += 10;
+			alien_speed = alien_speed * 9 / 10;
+		      }
+		  }
+	      }
+	  
+	}
+    
+      if ( now > bomb_move_next )
+	{
+	  move_bombs();
+	  bomb_move_next = now + alien_speed / 10;
+	}
+
+      char label[100];
+      sprintf(label, "Score: %d", score);
+      lv_label_set_text(score_label, label);
+}
+
+void spaceinvaders_loop()
+{
+
+  switch (state)
+    {
+    case SPACE_INVADER_GAME_STATE_NONE:
+      break;
+  
+    case SPACE_INVADER_GAME_STATE_START:
+      game_init();
+      state = SPACE_INVADER_GAME_STATE_RUN;
+      break;
+
+    case SPACE_INVADER_GAME_STATE_RUN:
+      game_run();
+      break;
+    }
+}
