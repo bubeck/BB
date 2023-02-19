@@ -107,10 +107,66 @@ bool flightbook_flights_fm_cb(uint8_t event, char * path)
     return true;
 }
 
+#include "lib/miniz/miniz.h"
+
+int unzip_map()
+{
+    char path[PATH_LEN];
+    char path2[PATH_LEN];
+	mz_zip_archive_file_stat *file_stat = malloc(sizeof(mz_zip_archive_file_stat));
+
+	//char *path = malloc(PATH_LEN);
+	//char *path2 = malloc(PATH_LEN);
+
+    mz_zip_archive * zip = malloc(sizeof(mz_zip_archive));
+    mz_zip_zero_struct(zip);
+#if 0
+    mz_zip_archive zip;
+    mz_zip_zero_struct(&zip);
+#endif
+    char mess[129];
+
+    strcpy(path, PATH_MAP_DIR "/JP_Japan_map.zip");
+    if (file_exists(path))
+    {
+        bool res = mz_zip_reader_init_file(zip, path, 0);
+        if (res)
+        {
+            int fileCount = (int)mz_zip_reader_get_num_files(zip);
+            for ( int i = 0; i < fileCount; i++ )
+            {
+        	    if (!mz_zip_reader_file_stat(zip, i, file_stat)) continue;
+        	    if (mz_zip_reader_is_file_a_directory(zip, i)) continue; // skip directories for now
+        	    sprintf(path2, PATH_MAP_DIR "/%s", file_stat->m_filename);
+        	    if ( file_exists(path2)) red_unlink(path2);
+        	    if ( !file_exists(path2) || file_size_from_name(path2) != file_stat->m_uncomp_size)
+        	    {
+        	    	uint8_t h;
+        	    		uint8_t m;
+        	    		uint8_t s;
+        	    		char value[20];
+
+        	    		rtc_get_time(&h, &m, &s);
+        	    		format_time(value, h, m);
+
+        	    	sprintf(mess, "%s Unzip: %s (%d)", value, path2, (int)file_stat->m_uncomp_size);
+        	    	//statusbar_msg_add(STATUSBAR_MSG_WARN, mess);
+
+            	    INFO("unzip: %s", mess);
+        	    	mz_zip_reader_extract_to_file(zip, i, path2, 0);
+        	    	//break;
+        	    }
+            }
+        }
+	    mz_zip_reader_end(zip);
+    }
+}
 
 
 void flightbook_open(bool from_left)
 {
+	//airspace_find_vertical();
+	unzip_map();
     gui_switch_task(&gui_filemanager, from_left ? LV_SCR_LOAD_ANIM_MOVE_LEFT : LV_SCR_LOAD_ANIM_MOVE_RIGHT);
     filemanager_open(PATH_LOGS_DIR, 0, &gui_settings, FM_FLAG_FOCUS | FM_FLAG_SORT_NAME | FM_FLAG_SHOW_EXT, flightbook_flights_fm_cb);
 }
