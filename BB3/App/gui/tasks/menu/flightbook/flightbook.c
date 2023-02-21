@@ -109,7 +109,7 @@ bool flightbook_flights_fm_cb(uint8_t event, char * path)
 
 #include "lib/miniz/miniz.h"
 
-int unzip_map()
+void unzip_map(void * param)
 {
     char path[PATH_LEN];
     char path2[PATH_LEN];
@@ -126,7 +126,7 @@ int unzip_map()
 #endif
     char mess[129];
 
-    strcpy(path, PATH_MAP_DIR "/JP_Japan_map.zip");
+    strcpy(path, PATH_MAP_DIR "/SK_Slovakia_map.zip");
     if (file_exists(path))
     {
         bool res = mz_zip_reader_init_file(zip, path, 0);
@@ -149,10 +149,8 @@ int unzip_map()
         	    		rtc_get_time(&h, &m, &s);
         	    		format_time(value, h, m);
 
-        	    	sprintf(mess, "%s Unzip: %s (%d)", value, path2, (int)file_stat->m_uncomp_size);
+        	    	INFO("%s Unzip: %s (%d)", value, path2, (int)file_stat->m_uncomp_size);
         	    	//statusbar_msg_add(STATUSBAR_MSG_WARN, mess);
-
-            	    INFO("unzip: %s", mess);
         	    	mz_zip_reader_extract_to_file(zip, i, path2, 0);
         	    	//break;
         	    }
@@ -160,13 +158,18 @@ int unzip_map()
         }
 	    mz_zip_reader_end(zip);
     }
+
+    vTaskDelete(NULL);
 }
 
 
 void flightbook_open(bool from_left)
 {
 	//airspace_find_vertical();
-	unzip_map();
+
+    xTaskCreate((TaskFunction_t)unzip_map, "unzip_map", 1024 * 4, NULL, 24, NULL);
+
+
     gui_switch_task(&gui_filemanager, from_left ? LV_SCR_LOAD_ANIM_MOVE_LEFT : LV_SCR_LOAD_ANIM_MOVE_RIGHT);
     filemanager_open(PATH_LOGS_DIR, 0, &gui_settings, FM_FLAG_FOCUS | FM_FLAG_SORT_NAME | FM_FLAG_SHOW_EXT, flightbook_flights_fm_cb);
 }
