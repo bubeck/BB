@@ -1025,14 +1025,14 @@ uint8_t airspace_distances(gnss_pos_t pilot, gnss_pos_t pilot_B, airspace_record
 	uint8_t distances_used;
 	// char buffer[1000];
 
-	vector_float_t Pi, Pi1, A, B;
-	float dx, dy;
+	vector_2d_double_t Pi, Pi1, A, B;
+	double dx, dy;
 
-	A.x = (float)pilot.longitude / GNSS_MUL;
-	A.y = (float)pilot.latitude / GNSS_MUL;
+	A.x = (double)pilot.longitude / GNSS_MUL;
+	A.y = (double)pilot.latitude / GNSS_MUL;
 
-	B.x = (float)pilot_B.longitude / GNSS_MUL;
-	B.y = (float)pilot_B.latitude / GNSS_MUL;
+	B.x = (double)pilot_B.longitude / GNSS_MUL;
+	B.y = (double)pilot_B.latitude / GNSS_MUL;
 
 	dx = B.x - A.x;
 	dy = B.y - A.y;
@@ -1044,18 +1044,18 @@ uint8_t airspace_distances(gnss_pos_t pilot, gnss_pos_t pilot_B, airspace_record
 	distances_used = 0;
 	if (as->number_of_points >= 3)
 	{
-		Pi.x = (float)as->points.ptr[0].longitude / GNSS_MUL;
-		Pi.y = (float)as->points.ptr[0].latitude / GNSS_MUL;
+		Pi.x = (double)as->points.ptr[0].longitude / GNSS_MUL;
+		Pi.y = (double)as->points.ptr[0].latitude / GNSS_MUL;
 
-		float dot_i = DOTPRODUCT(A,B,Pi);
+		double dot_i = DOTPRODUCT(A,B,Pi);
 		for (int i = as->number_of_points-1; i >= 0; i--)
 		{
 			// Step 2: For a given index i∈{1,...,n}:
 			// Calculate n→*AP→i and n→*AP→i+1
-			Pi1.x = (float)as->points.ptr[i].longitude / GNSS_MUL;
-			Pi1.y = (float)as->points.ptr[i].latitude / GNSS_MUL;
+			Pi1.x = (double)as->points.ptr[i].longitude / GNSS_MUL;
+			Pi1.y = (double)as->points.ptr[i].latitude / GNSS_MUL;
 
-			float dot_i1 = DOTPRODUCT(A,B,Pi1);
+			double dot_i1 = DOTPRODUCT(A,B,Pi1);
 
 			// DBG("dot_i: %f    dot_i1: %f\n", dot_i, dot_i1);
 
@@ -1067,7 +1067,7 @@ uint8_t airspace_distances(gnss_pos_t pilot, gnss_pos_t pilot_B, airspace_record
 			{
 				// Step 4: In the case of AB intersect PiPi+1, in order to find
 				// the intersection point Q=AB∩PiPi+1 of the lines AB and PiPi+1
-				vector_float_t Q;
+				vector_2d_double_t Q;
 
 				Q.x =
 						DETERMINANT(B.x*A.y-B.y*A.x,       B.x-A.x,
@@ -1088,9 +1088,14 @@ uint8_t airspace_distances(gnss_pos_t pilot, gnss_pos_t pilot_B, airspace_record
 						(int32_t)(Q.y * GNSS_MUL), (int32_t)(Q.x * GNSS_MUL),
 						false, NULL);
 
+				if (distance == 2077480)
+				{
+					distance++;
+				}
+
 				// Find out, if Q is in the direction of the pilot or behind him.
-				float Qdx = Q.x - A.x;
-				float Qdy = Q.y - A.y;
+				double Qdx = Q.x - A.x;
+				double Qdy = Q.y - A.y;
 
 				if ( Qdx * dx < 0 || Qdy * dy < 0 )
 					distance = -distance;                     // Q is behind pilot
@@ -1120,6 +1125,297 @@ uint8_t airspace_distances(gnss_pos_t pilot, gnss_pos_t pilot_B, airspace_record
 	return distances_used;
 }
 
+// X=longitude
+bool intersect1i( gnss_pos_t p1, gnss_pos_t p2, gnss_pos_t p3, gnss_pos_t p4, gnss_pos_t *i)
+{
+  int64_t d = (((int64_t)p1.longitude-(int64_t)p2.longitude) * ((int64_t)p3.latitude-p4.latitude) - ((int64_t)p1.latitude-(int64_t)p2.latitude)*((int64_t)p3.longitude-p4.longitude))/GNSS_MUL;
+  if (d == 0)
+    return false;
+
+    i->longitude = ( ((int64_t)p1.longitude*(int64_t)p2.latitude/GNSS_MUL-(int64_t)p1.latitude*(int64_t)p2.longitude/GNSS_MUL) * ((int64_t)p3.longitude-(int64_t)p4.longitude)/GNSS_MUL
+	   -
+	   ((int64_t)p1.longitude-(int64_t)p2.longitude)*((int64_t)p3.longitude*(int64_t)p4.latitude/GNSS_MUL-(int64_t)p3.latitude*(int64_t)p4.longitude/GNSS_MUL)/GNSS_MUL)
+    *GNSS_MUL/d;
+  i->latitude = (((int64_t)(int64_t)p1.longitude*(int64_t)p2.latitude-(int64_t)p1.latitude*(int64_t)p2.longitude)/GNSS_MUL*((int64_t)p3.latitude-(int64_t)p4.latitude)/GNSS_MUL
+	  -
+	  ((int64_t)p1.latitude-(int64_t)p2.latitude)*(((int64_t)p3.longitude*(int64_t)p4.latitude-(int64_t)p3.latitude*(int64_t)p4.longitude)/GNSS_MUL)/GNSS_MUL)
+    *GNSS_MUL/d;
+    
+  return true;
+}
+
+bool intersect1( vector_2d_double_t p1, vector_2d_double_t p2, vector_2d_double_t p3, vector_2d_double_t p4, vector_2d_double_t *i)
+{
+  double d = (p1.x-p2.x) * (p3.y-p4.y) - (p1.y-p2.y)*(p3.x-p4.x);
+  if (d == 0)
+    return false;
+
+  i->x = ((p1.x*p2.y-p1.y*p2.x)*(p3.x-p4.x) - (p1.x-p2.x)*(p3.x*p4.y-p3.y*p4.x))/d;
+  i->y = ((p1.x*p2.y-p1.y*p2.x)*(p3.y-p4.y) - (p1.y-p2.y)*(p3.x*p4.y-p3.y*p4.x))/d;
+    
+  return true;
+}
+
+bool in_bounding_box_i(gnss_pos_t p1, gnss_pos_t p2, gnss_pos_t i)
+{
+  int32_t x_min = min(p1.longitude, p2.longitude);
+  int32_t x_max = max(p1.longitude, p2.longitude);
+  int32_t y_min = min(p1.latitude, p2.latitude);
+  int32_t y_max = max(p1.latitude, p2.latitude);
+    
+  return i.longitude>=x_min && i.longitude<=x_max && i.latitude>=y_min && i.latitude<=y_max;
+}
+
+bool in_bounding_box(vector_2d_double_t p1, vector_2d_double_t p2, vector_2d_double_t i)
+{
+  double x_min = min(p1.x, p2.x);
+  double x_max = max(p1.x, p2.x);
+  double y_min = min(p1.y, p2.y);
+  double y_max = max(p1.y, p2.y);
+    
+  return i.x>=x_min && i.x<=x_max && i.y>=y_min && i.y<=y_max;
+}
+
+/**
+ * @param p1/p2 is the pilot heading.
+ */
+bool intersection( vector_2d_double_t p1, vector_2d_double_t p2, vector_2d_double_t p3, vector_2d_double_t p4, vector_2d_double_t *i)
+{
+  bool intersects = intersect1(p1, p2, p3, p4, i);
+  if (!intersects)
+    return false;
+
+  return in_bounding_box(p3,p4,*i);
+}
+
+/**
+ * @param p1/p2 is the pilot heading.
+ */
+bool intersection_i( gnss_pos_t p1, gnss_pos_t p2, gnss_pos_t p3, gnss_pos_t p4, gnss_pos_t *i)
+{
+  bool intersects = intersect1i(p1, p2, p3, p4, i);
+  if (!intersects)
+    return false;
+
+  return in_bounding_box_i(p3,p4,*i);
+}
+
+/**
+ * For a given airsapce_record_t "as" compute all points where the pilot is
+ * crossing boundaries of the airspace and return the distances
+ * from the pilot to this points. The algorithm is taken from
+ * https://math.stackexchange.com/questions/3607924/find-intersection-point-of-line-with-2d-polygon
+ *
+ * @param pilot   the gnss_pos_t of the pilot
+ * @param pilot_B another gnss_pos_t in which direction the pilot is heading to.
+ *                Typically derived from fc.gnss.heading by caller.
+ * @param as      the airspace, for which we compute the crossings of the pilot.
+ *
+ * @param distances pointer to a caller allocated array, where we store the
+ *                  computed distances. They are returned as "centimeter" values.
+ *                  They are negative, if they are behind the pilot and positive
+ *                  if they are in front of the pilot.
+ *                  All results are sorted in ascending order.
+ * @param distances_len the size of the allocated "distances" array given by the caller.
+ *
+ * @return number of distances computed.
+ */
+uint8_t airspace_distances_fast(gnss_pos_t pilot, gnss_pos_t pilot_B, airspace_record_t *as, int32_t *distances, uint8_t distances_len)
+{
+	uint8_t distances_used;
+	char buffer[1000];
+
+	vector_2d_double_t Pi, Pi1, A, B, Q;
+	double dx, dy;
+
+	A.x = (double)pilot.longitude / GNSS_MUL;
+	A.y = (double)pilot.latitude / GNSS_MUL;
+
+	B.x = (double)pilot_B.longitude / GNSS_MUL;
+	B.y = (double)pilot_B.latitude / GNSS_MUL;
+
+	dx = B.x - A.x;
+	dy = B.y - A.y;
+
+	// This is used to set a breakpoint to debug a specific airspace:
+	if ( strcmp("Stuttgart 128.950", as->name.ptr) == 0 && as->airspace_class == ac_class_D)
+		buffer[0] = 2;
+
+	distances_used = 0;
+	if (as->number_of_points >= 3)
+	{
+		Pi.x = (double)as->points.ptr[0].longitude / GNSS_MUL;
+		Pi.y = (double)as->points.ptr[0].latitude / GNSS_MUL;
+		for (int i = as->number_of_points-1; i >= 0; i--)
+		{
+			// Step 2: For a given index i∈{1,...,n}:
+			// Calculate n→*AP→i and n→*AP→i+1
+			Pi1.x = (double)as->points.ptr[i].longitude / GNSS_MUL;
+			Pi1.y = (double)as->points.ptr[i].latitude / GNSS_MUL;
+
+			if ( strcmp("Stuttgart 128.950", as->name.ptr) == 0 && as->airspace_class == ac_class_D)
+				if (i==39)
+					buffer[0] = 1;
+
+			if (intersection(A, B, Pi, Pi1, &Q))
+			  {
+				// Step 5: Calculate the square distance between point A and Q:
+				// distance = sqrt((Q.x-A.x)*(Q.x-A.x)+(Q.y-A.y)*(Q.y-A.y));
+				int32_t distance = geo_distance(pilot.latitude, pilot.longitude,
+						(int32_t)(Q.y * GNSS_MUL), (int32_t)(Q.x * GNSS_MUL),
+						false, NULL);
+
+				// Find out, if Q is in the direction of the pilot or behind him.
+				double Qdx = Q.x - A.x;
+				double Qdy = Q.y - A.y;
+
+				if ( Qdx * dx < 0 || Qdy * dy < 0 )
+					distance = -distance;                     // Q is behind pilot
+
+				// sprintf(buffer, "Pi %f,%f  Pi1 %f,%f  Q %f,%f distance %ld", Pi.y, Pi.x, Pi1.y, Pi1.x, Q.y, Q.x, distance );
+				// DBG("distance: %d km\n", distance/100000);
+
+				if (distances_used < distances_len)
+				{
+					distances[distances_used] = distance;
+					distances_used++;
+				}
+				else
+				{
+					ERR("airspace %s has too many intersections", as->name);
+					break;
+				}
+			}
+			Pi = Pi1;
+		}
+	}
+
+	if (distances_used > 1)
+		qsort(distances, distances_used, sizeof(int32_t), qsort_distance_cmp);
+
+	return distances_used;
+}
+
+/**
+ * For a given airsapce_record_t "as" compute all points where the pilot is
+ * crossing boundaries of the airspace and return the distances
+ * from the pilot to this points. The algorithm is taken from
+ * https://math.stackexchange.com/questions/3607924/find-intersection-point-of-line-with-2d-polygon
+ *
+ * @param pilot   the gnss_pos_t of the pilot
+ * @param pilot_B another gnss_pos_t in which direction the pilot is heading to.
+ *                Typically derived from fc.gnss.heading by caller.
+ * @param as      the airspace, for which we compute the crossings of the pilot.
+ *
+ * @param distances pointer to a caller allocated array, where we store the
+ *                  computed distances. They are returned as "centimeter" values.
+ *                  They are negative, if they are behind the pilot and positive
+ *                  if they are in front of the pilot.
+ *                  All results are sorted in ascending order.
+ * @param distances_len the size of the allocated "distances" array given by the caller.
+ *
+ * @return number of distances computed.
+ */
+uint8_t airspace_distances_fast_i(gnss_pos_t pilot, gnss_pos_t pilot_B, airspace_record_t *as, int32_t *distances, uint8_t distances_len)
+{
+	uint8_t distances_used;
+	char buffer[1000];
+
+	gnss_pos_t Pi, Pi1, A, B, Q;
+	int32_t dx, dy;
+
+	A= pilot;
+
+	B = pilot_B;
+
+	dx = B.longitude - A.longitude;
+	dy = B.latitude - A.latitude;
+
+	// This is used to set a breakpoint to debug a specific airspace:
+	if ( strcmp("Stuttgart 128.950", as->name.ptr) == 0 && as->airspace_class == ac_class_D)
+		buffer[0] = 2;
+
+	distances_used = 0;
+	if (as->number_of_points >= 3)
+	{
+		Pi = as->points.ptr[0];
+		for (int i = as->number_of_points-1; i >= 0; i--)
+		{
+			// Step 2: For a given index i∈{1,...,n}:
+			// Calculate n→*AP→i and n→*AP→i+1
+			Pi1 = as->points.ptr[i];
+
+			if ( strcmp("Stuttgart 128.950", as->name.ptr) == 0 && as->airspace_class == ac_class_D)
+				if (i==39)
+					buffer[0] = 1;
+
+			if (intersection_i(A, B, Pi, Pi1, &Q))
+			  {
+				// Step 5: Calculate the square distance between point A and Q:
+				// distance = sqrt((Q.x-A.x)*(Q.x-A.x)+(Q.y-A.y)*(Q.y-A.y));
+				int32_t distance = geo_distance(pilot.latitude, pilot.longitude,
+						Q.latitude, Q.longitude,
+						false, NULL);
+
+				// Find out, if Q is in the direction of the pilot or behind him.
+				int32_t Qdx = Q.longitude - A.longitude;
+				int32_t Qdy = Q.latitude - A.latitude;
+
+				if ( (int64_t)Qdx * dx < 0 || (int64_t)Qdy * dy < 0 )
+					distance = -distance;                     // Q is behind pilot
+
+				// sprintf(buffer, "Pi %f,%f  Pi1 %f,%f  Q %f,%f distance %ld", Pi.y, Pi.x, Pi1.y, Pi1.x, Q.y, Q.x, distance );
+				// DBG("distance: %d km\n", distance/100000);
+
+				if (distances_used < distances_len)
+				{
+					distances[distances_used] = distance;
+					distances_used++;
+				}
+				else
+				{
+					ERR("airspace %s has too many intersections", as->name);
+					break;
+				}
+			}
+			Pi = Pi1;
+		}
+	}
+
+	if (distances_used > 1)
+		qsort(distances, distances_used, sizeof(int32_t), qsort_distance_cmp);
+
+	return distances_used;
+}
+
+uint8_t airspace_distances_both(gnss_pos_t pilot, gnss_pos_t pilot_B, airspace_record_t *as, int32_t *distances, uint8_t distances_len)
+{
+	uint8_t num_fast, num_slow, num_i;
+	int32_t distances_slow[distances_len];
+	int32_t distances_i[distances_len];
+	bool problem = false;
+
+	num_fast = airspace_distances_fast(pilot, pilot_B, as, distances, distances_len);
+	num_slow = airspace_distances(pilot, pilot_B, as, distances_slow, distances_len);
+	num_i = airspace_distances_fast_i(pilot, pilot_B, as, distances_i, distances_len);
+	if (num_fast != num_slow || num_fast != num_i)
+		problem = true;
+	else
+	{
+		for (int i = 0; i < num_fast; i++)
+		{
+			// Max 50 m error allowed
+			if (abs(distances[i]-distances_slow[i]) > 5000 || abs(distances[i]-distances_i[i]) > 500)
+				problem = true;
+		}
+	}
+
+	if (problem)
+		ERR("Difference in airspace_distances computation!");
+
+	return num_fast;
+}
+
 /**
  * Iterate over all near airspaces and compute the distances to each airspace
  * from the pilot in the direction of flying.
@@ -1145,14 +1441,25 @@ void airspaces_near_compute_distances()
 		{
 			airspace_record_t * as = fc.airspaces.near.asn[i].as;
 			uint8_t distances_len = AIRSPACE_NEAR_DISTANCE_NUM;
-			bzero(fc.airspaces.near.asn[i].distances, sizeof(fc.airspaces.near.asn[i].distances));
+			int32_t distances_new[AIRSPACE_NEAR_DISTANCE_NUM];
+			
+			bzero(distances_new, sizeof(distances_new));
+			//bzero(fc.airspaces.near.asn[i].distances, sizeof(fc.airspaces.near.asn[i].distances));
 
 			// This is used to set a breakpoint to debug a specific airspace:
 			// if ( strcmp("Stuttgart", as->name.ptr) == 0 && as->airspace_class == ac_class_C)
 			//	distances_used = 0;
 
-			distances_used = airspace_distances(pilot, pilot_B, as, fc.airspaces.near.asn[i].distances, distances_len);
+			distances_used = airspace_distances_both(pilot, pilot_B, as, distances_new, distances_len);
+			//distances_used = airspace_distances_both(pilot, pilot_B, as, fc.airspaces.near.asn[i].distances, distances_len);
 
+			// Sanity check: The number must be even, otherwise we have arithmetic problems and skip this airspace.
+			if (distances_used % 2 == 1)
+			  continue;
+
+			// The result is valid: copy it to destination
+			memcpy(fc.airspaces.near.asn[i].distances, distances_new, sizeof(distances_new));
+			
 			/* Find out, if pilot is inside this airspace: */
 			int num = 0;
 			for (int j = 0; j < distances_used; j++)
@@ -1167,7 +1474,7 @@ void airspaces_near_compute_distances()
 			DBG("airspace distance \"%s\": ", as->name.ptr);
 			for ( int i = 0; i < distances_used; i++ )
 			{
-				DBG("%.2f km ", (float)fc.airspaces.near.asn[i].distances[i]/100000);
+				DBG("%.2f km ", (double)fc.airspaces.near.asn[i].distances[i]/100000);
 			}
 			DBG("\n");
 		}
